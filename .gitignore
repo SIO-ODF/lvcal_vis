@@ -1,3 +1,4 @@
 #### Ignore testing
 *.ipynb
 *.egg-info
+*.out
