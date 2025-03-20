@@ -38,6 +38,10 @@ df = pd.DataFrame(data, columns=["Timestamp", "Sensor", "Rawd", "Value", "Serial
 df["Timestamp"] = pd.to_datetime(df["Timestamp"])
 sensors = df["Serial"].unique()  # For later in visualizing
 
+# Handle the setpoints (setting, time HH:MM)
+setpoints_df = pd.read_csv("setpoints.csv", dtype={"sp": float, "time": str})
+setpoints_df["Datetime"] = setpoints_df["time"].apply(lambda x: datetime.strptime(f"{date_part} {x}:00", "%d-%b-%Y %H:%M:%S"))
+
 # Figure setup
 fig, axes = plt.subplots(nrows=2, ncols=1, figsize=(12, 8), sharex=True)
 
@@ -47,7 +51,7 @@ for sensor in sensors:
     axes[0].plot(
         subset["Timestamp"], subset["Rawd"], label=f"{sensor}", linestyle="--")
 axes[0].set_ylabel("Rawd Readings")
-axes[0].set_title("Sensor Rawd Readings Over Time")
+axes[0].set_title("Sensor Rawd Readings Over Time", pad=20)
 axes[0].legend()
 axes[0].grid()
 
@@ -56,10 +60,23 @@ for sensor in sensors:
     subset = df[df["Serial"] == sensor]
     axes[1].plot(subset["Timestamp"], subset["Value"], label=f"{sensor}")
 axes[1].set_ylabel("Value Readings")
-axes[1].set_title("Sensor Value Readings Over Time")
+axes[1].set_title("Sensor Value Readings Over Time", pad=20)
 axes[1].set_xlabel("Timestamp")
 axes[1].legend()
 axes[1].grid()
+
+# Add vertical lines for the setpoints
+for idx, row in setpoints_df.iterrows():
+    setpoint_time = row["Datetime"]
+    sp_value = row["sp"]
+    
+    # Draw the vertical line at the setpoint time
+    axes[0].axvline(setpoint_time, color="grey", linestyle="-", linewidth=2)
+    axes[1].axvline(setpoint_time, color="grey", linestyle="-", linewidth=2)
+    
+    # Add label for the setpoint value at the top of the figure
+    axes[0].text(setpoint_time, max(df["Rawd"]) * 1.05, f"{sp_value}", ha="center", va="bottom", color="black", fontsize=10)
+    axes[1].text(setpoint_time, max(df["Value"]) * 1.05, f"{sp_value}", ha="center", va="bottom", color="black", fontsize=10)
 
 plt.xticks(rotation=45)
 plt.tight_layout()
