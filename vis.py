@@ -5,7 +5,7 @@ from datetime import datetime
 data = []
 
 # Read the file (can change this)
-with open("metcal - Copy (4).out", "r") as file:
+with open("metcal - Copy (7).out", "r") as file:
     lines = file.readlines()
 
 # Parse the lines and assemble the dataframe
