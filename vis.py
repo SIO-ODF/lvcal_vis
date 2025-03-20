@@ -42,6 +42,10 @@ sensors = df["Serial"].unique()  # For later in visualizing
 setpoints_df = pd.read_csv("setpoints.csv", dtype={"sp": float, "time": str})
 setpoints_df["Datetime"] = setpoints_df["time"].apply(lambda x: datetime.strptime(f"{date_part} {x}:00", "%d-%b-%Y %H:%M:%S"))
 
+# Handle the observations (TT Input2 (humidity), time HH:MM)
+obs_df = pd.read_csv("obs.csv",  dtype={"Input2": float, "time": str})
+obs_df["Datetime"] = obs_df["time"].apply(lambda x: datetime.strptime(f"{date_part} {x}:00", "%d-%b-%Y %H:%M:%S"))
+
 # Figure setup
 fig, axes = plt.subplots(nrows=2, ncols=1, figsize=(12, 8), sharex=True)
 
@@ -59,6 +63,7 @@ axes[0].grid()
 for sensor in sensors:
     subset = df[df["Serial"] == sensor]
     axes[1].plot(subset["Timestamp"], subset["Value"], label=f"{sensor}")
+axes[1].scatter(obs_df["Datetime"], obs_df["Input2"], label="Observed chamber value", color="red", marker="x")
 axes[1].set_ylabel("Value Readings")
 axes[1].set_title("Sensor Value Readings Over Time", pad=20)
 axes[1].set_xlabel("Timestamp")
