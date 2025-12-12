@@ -75,6 +75,8 @@ for sensor in sensors:
     subset = df[df["Serial"] == sensor]
     axes[1].plot(subset["Timestamp"], subset["Value"], label=f"{sensor}")
 axes[1].scatter(obs_df["Datetime"], obs_df[chamber], label="Observed chamber value", color="red", marker="x")
+if "Omni" in obs_df.columns():
+    axes[1].scatter(obs_df["Datetime"], obs_df["Omni"], label="Omniport reading", color="black", marker="+")
 axes[1].set_ylabel("Value Readings")
 axes[1].set_title("Sensor Value Readings Over Time", pad=20)
 axes[1].set_xlabel("Timestamp")
