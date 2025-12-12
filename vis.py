@@ -3,6 +3,8 @@ import pandas as pd
 from datetime import datetime
 
 data = []
+chamber = "Input2"  #   The name of the chamber output that is being plotted against the standard
+date_marker = "DATE"
 
 # Read the file (can change this)
 with open("metcal - Copy (7).out", "r") as file:
@@ -40,12 +42,21 @@ sensors = df["Serial"].unique()  # For later in visualizing
 
 # Handle the setpoints (setting, time HH:MM)
 setpoints_df = pd.read_csv("setpoints.csv", dtype={"sp": float, "time": str})
-setpoints_df["Datetime"] = setpoints_df["time"].apply(lambda x: datetime.strptime(f"{date_part} {x}:00", "%d-%b-%Y %H:%M:%S"))
+if date_marker.lower() in str(list(setpoints_df.columns)).lower():  #   If there is a date column, don't use `date_part`
+    setpoints_df["Datetime"] = pd.to_datetime(
+        setpoints_df["DATE"] + " " + setpoints_df["time"],
+        format="%m/%d/%y %H:%M")
+else:
+    setpoints_df["Datetime"] = setpoints_df["time"].apply(lambda x: datetime.strptime(f"{date_part} {x}:00", "%d-%b-%Y %H:%M:%S"))
 
 # Handle the observations (TT Input2 (humidity), time HH:MM)
-obs_df = pd.read_csv("obs.csv",  dtype={"Input2": float, "time": str})
-obs_df["Datetime"] = obs_df["time"].apply(lambda x: datetime.strptime(f"{date_part} {x}:00", "%d-%b-%Y %H:%M:%S"))
-
+obs_df = pd.read_csv("obs.csv",  dtype={chamber: float, "time": str})
+if date_marker.lower() in str(list(obs_df.columns)).lower():
+    obs_df["Datetime"] = pd.to_datetime(
+        obs_df["DATE"] + " " + setpoints_df["time"],
+        format="%m/%d/%y %H:%M")
+else:
+    obs_df["Datetime"] = obs_df["time"].apply(lambda x: datetime.strptime(f"{date_part} {x}:00", "%d-%b-%Y %H:%M:%S"))
 # Figure setup
 fig, axes = plt.subplots(nrows=2, ncols=1, figsize=(12, 8), sharex=True)
 
@@ -63,7 +74,7 @@ axes[0].grid()
 for sensor in sensors:
     subset = df[df["Serial"] == sensor]
     axes[1].plot(subset["Timestamp"], subset["Value"], label=f"{sensor}")
-axes[1].scatter(obs_df["Datetime"], obs_df["Input2"], label="Observed chamber value", color="red", marker="x")
+axes[1].scatter(obs_df["Datetime"], obs_df[chamber], label="Observed chamber value", color="red", marker="x")
 axes[1].set_ylabel("Value Readings")
 axes[1].set_title("Sensor Value Readings Over Time", pad=20)
 axes[1].set_xlabel("Timestamp")
